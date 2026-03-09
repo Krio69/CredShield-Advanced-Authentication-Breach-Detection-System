@@ -69,11 +69,13 @@ DATABASES = {
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
         conn_health_checks=True,
+        # Force Django to use the modern 'psycopg' (v3) driver
+        engine='django.db.backends.postgresql' 
     )
 }
 
 # Add a fallback for local development if DATABASE_URL is missing
-if not DATABASES['default']:
+if not os.environ.get('DATABASE_URL'):
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
