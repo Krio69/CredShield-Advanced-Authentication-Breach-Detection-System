@@ -15,6 +15,18 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-itckw@xo%3atqkpy_+@j_
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['.vercel.app', 'now.sh', 'localhost', '127.0.0.1']
+# Add this near your ALLOWED_HOSTS
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://*.now.sh',
+    # Replace the link below with your actual Vercel project URL
+    'https://credential-breach-detection-brute-f.vercel.app',
+]
+
+# Ensure cookies are handled correctly over HTTPS
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
 
 # Application definition
 INSTALLED_APPS = [
