@@ -110,4 +110,16 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.CustomUser'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# --- SMTP EMAIL CONFIGURATION ---
+# Use SMTP for real email delivery
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# Security: Pull credentials from Environment Variables (set these in Vercel)
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'kripeshbhele123@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'ooianrrvfqmgyssa') # Use 16-digit App Password
+
+# This is the "From" address users will see
+DEFAULT_FROM_EMAIL = f"CredShield Security <{EMAIL_HOST_USER}>"
