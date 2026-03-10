@@ -5,6 +5,8 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.utils.timezone import now
 from django.http import HttpResponseForbidden, HttpResponse
 from django.template import Template, RequestContext
+from django.core.mail import send_mail
+from django.conf import settings
 from datetime import timedelta, date
 import random
 from .models import CustomUser, SecurityAuditLog, BlacklistedIP
@@ -95,10 +97,24 @@ def login_view(request):
                     request.session['mfa_required'] = True
                     request.session['mfa_otp'] = otp
                     request.session['mfa_user_id'] = user_auth.pk
-                    # Store backend to allow manual login later
                     request.session['mfa_user_backend'] = user_auth.backend
                     
-                    print(f"[CredShield MFA] OTP for {user_auth.username}: {otp}")
+                    # --- SEND OTP VIA EMAIL ---
+                    subject = "CredShield: MFA Verification Code"
+                    email_body = f"Hello {user_auth.username},\n\nA login attempt was made from an unknown IP ({client_ip}).\n\nYour verification code is: {otp}\n\nIf this was not you, please change your password immediately."
+                    
+                    try:
+                        send_mail(
+                            subject,
+                            email_body,
+                            settings.EMAIL_HOST_USER,
+                            [user_auth.email],
+                            fail_silently=False,
+                        )
+                    except Exception as e:
+                        # Fallback to console log if email fails, but continue to verification page
+                        print(f"[CredShield MFA ERROR] Could not send email: {e}")
+                    
                     return redirect('mfa_verify')
 
                 # Standard Login for known IPs
@@ -166,7 +182,7 @@ def mfa_verify_view(request):
             except CustomUser.DoesNotExist:
                 return redirect('login')
         else:
-            message = "Invalid OTP. Please check the server console."
+            message = "Invalid OTP. Please check your registered email address."
 
     html_template = """
     <!DOCTYPE html>
@@ -180,7 +196,7 @@ def mfa_verify_view(request):
     <body class="flex items-center justify-center min-h-screen">
       <div class="bg-[#111] border border-[#222] rounded-2xl p-10 w-full max-w-md">
         <h1 class="text-2xl font-bold text-blue-400 mb-2">New IP Detected</h1>
-        <p class="text-gray-400 text-sm mb-6">Enter the 6-digit code sent to your server console.</p>
+        <p class="text-gray-400 text-sm mb-6">Enter the 6-digit code sent to your registered email address.</p>
         {% if message %}<p class='text-red-400 text-sm mb-4'>{{ message }}</p>{% endif %}
         <form method="post">
           {% csrf_token %}
