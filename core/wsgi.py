@@ -8,10 +8,18 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
 import os
-
 from django.core.wsgi import get_wsgi_application
+from django.core.management import call_command
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
+# Initialize the application first
 application = get_wsgi_application()
 app = application
+
+# Run migrations safely only if the app is starting up
+try:
+    print("Checking for database migrations...")
+    call_command('migrate', '--noinput')
+except Exception as e:
+    print(f"Migration error (this is common during concurrent starts): {e}")
